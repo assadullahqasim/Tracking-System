@@ -5,9 +5,13 @@ const webhookClient = new WebhookClient({ url: config.DISCORD_WEBHOOK_URL });
 
 const formatNumber = (num, decimals = 2) => num !== undefined && num !== null ? num.toFixed(decimals) : 'N/A';
 
-const getChartURL = (symbol) => {
-    const baseSymbol = symbol.replace('/USDT', ''); // Normalize BTC/USDT to BTC
+const getBinanceChartURL = (symbol) => {
+    const baseSymbol = symbol.replace('/USDT', '');
     return `https://www.binance.com/en/trade/${baseSymbol}_USDT`;
+};
+
+const getTradingViewChartURL = (symbol) => {
+    return `https://www.tradingview.com/chart/?symbol=BINANCE:${symbol}`;
 };
 
 export const sendDiscordAlert = async ({
@@ -43,7 +47,10 @@ export const sendDiscordAlert = async ({
                 inline: true 
             },
             { name: 'Funding Rate', value: fundingRate !== null ? `📈 ${formatNumber(fundingRate, 4)}%` : 'N/A', inline: true },
-            { name: 'Chart', value: `[🔗 View on Binance](${getChartURL(symbol)})` }
+            { 
+                name: 'Charts', 
+                value: `[🔗 Binance](${getBinanceChartURL(symbol)}) | [🔗 TradingView](${getTradingViewChartURL(symbol)})` 
+            }
         ],
         timestamp: new Date(),
         color: movementColor,

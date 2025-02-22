@@ -1,11 +1,10 @@
 import WebSocket from 'ws';
-import {connectDB,saveMarketData, initSchemas, cleanupOldData } from './db/db.js';
+import { connectDB, saveMarketData, initSchemas, cleanupOldData } from './db/db.js';
 import config from './config/config.js';
 import { sendDiscordAlert } from './services/discord.js';
 import { fetchOrderBook, analyzeOrderBook, fetchWhaleTrades, fetchFundingRate } from './binance.js';
-import { detectTrend, detectBreakout, calculateRSI } from './utils/indicator.js'; // Added calculateRSI
+import { detectTrend, detectBreakout, calculateRSI } from './utils/indicator.js';
 
-// WebSocket Connection with Auto-Reconnect & Backoff
 let ws;
 let reconnectAttempts = 0;
 const maxReconnectAttempts = 10;
@@ -34,7 +33,6 @@ const connectWebSocket = (db) => {
     ws.on('message', (data) => processMarketData(db, data));
 };
 
-// Process Incoming Market Data with Throttling
 let lastInsert = 0;
 const processMarketData = async (db, data) => {
     try {
@@ -79,7 +77,6 @@ const processMarketData = async (db, data) => {
     }
 };
 
-// Fetch and Store Funding Rate
 const fetchAndStoreFundingRate = async (db, symbol) => {
     try {
         const fundingRate = await fetchFundingRate(symbol);
@@ -94,7 +91,6 @@ const fetchAndStoreFundingRate = async (db, symbol) => {
     }
 };
 
-// Analyze a Single Symbol with Dynamic Trend + Breakout
 const analyzeSymbol = async (db, symbol) => {
     try {
         const timeFrames = config.TIME_FRAMES.filter(tf => tf.label === '5M');
@@ -152,12 +148,10 @@ const analyzeSymbol = async (db, symbol) => {
             const volumeChange = volumeAvg ? latestPrice.volume / volumeAvg : 0;
             const priceAboveVWAP = latestPrice.price > latestPrice.vwap;
 
-            // Adaptive thresholds based on trend strength
-            const priceThreshold = isNeutral ? 4 : 6; // 4% neutral, 6% strong trend
-            const volumeThreshold = isNeutral ? 3 : 5; // 3x neutral, 5x strong trend
-            const imbalanceThreshold = isNeutral ? 1.5 : 2; // 1.5x neutral, 2x strong trend
+            const priceThreshold = isNeutral ? 4 : 6;
+            const volumeThreshold = isNeutral ? 3 : 5;
+            const imbalanceThreshold = isNeutral ? 1.5 : 2;
 
-            // Whale trade check (last 10 min)
             const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
             const [whaleTradesDB] = await db.query(
                 'SELECT type FROM WhaleTransaction WHERE symbol = ? AND timestamp >= ? LIMIT 5',
@@ -166,7 +160,6 @@ const analyzeSymbol = async (db, symbol) => {
             const hasBullishWhale = whaleTradesDB.some(t => t.type === 'buy') || whaleTrades.some(t => t.amount * latestPrice.price >= config.WHALE_TRADE_THRESHOLD && t.side === 'buy');
             const hasBearishWhale = whaleTradesDB.some(t => t.type === 'sell') || whaleTrades.some(t => t.amount * latestPrice.price >= config.WHALE_TRADE_THRESHOLD && t.side === 'sell');
 
-            // Signal logic
             if ((isStrongBullish || (isNeutral && breakout1H === 'Bullish Breakout')) && 
                 priceChange >= priceThreshold && 
                 volumeChange >= volumeThreshold && 
