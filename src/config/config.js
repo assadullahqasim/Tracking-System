@@ -3,7 +3,6 @@ import "dotenv/config";
 export default {
     BINANCE_API_KEY: process.env.BINANCE_API_KEY,
     BINANCE_SECRET_KEY: process.env.BINANCE_SECRET_KEY,
-    MONGODB_URI: process.env.MONGODB_URI,
     TIDB_URI: process.env.TIDB_URI,
     DISCORD_WEBHOOK_URL: process.env.DISCORD_WEBHOOK_URL,
     
