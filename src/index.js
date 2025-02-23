@@ -147,6 +147,7 @@ const analyzeSymbol = async (db, symbol) => {
             const priceChange = ((latestPrice.price - priceAvg) / priceAvg) * 100;
             const volumeChange = volumeAvg ? latestPrice.volume / volumeAvg : 0;
             const priceAboveVWAP = latestPrice.price > latestPrice.vwap;
+            const vwapDeviation = ((latestPrice.price - latestPrice.vwap) / latestPrice.vwap) * 100; // VWAP deviation %
 
             const priceThreshold = isNeutral ? 4 : 6;
             const volumeThreshold = isNeutral ? 3 : 5;
@@ -164,7 +165,7 @@ const analyzeSymbol = async (db, symbol) => {
                 priceChange >= priceThreshold && 
                 volumeChange >= volumeThreshold && 
                 imbalance > imbalanceThreshold && 
-                priceAboveVWAP && 
+                !priceAboveVWAP && // Buy low: price at or below VWAP
                 hasBullishWhale) {
                 console.log(`🚨 Bullish Alert: ${symbol} (Confirmed on ${label})`);
                 await sendDiscordAlert({
@@ -173,7 +174,7 @@ const analyzeSymbol = async (db, symbol) => {
                     priceChange,
                     volumeChange,
                     orderBookImbalance: imbalance,
-                    vwap: latestPrice.vwap,
+                    vwapDeviation, // Added VWAP deviation
                     fundingRate,
                     rsi1H,
                     breakout: breakout1H
@@ -182,7 +183,7 @@ const analyzeSymbol = async (db, symbol) => {
                 priceChange <= -priceThreshold && 
                 volumeChange >= volumeThreshold && 
                 imbalance < 1 / imbalanceThreshold && 
-                !priceAboveVWAP && 
+                priceAboveVWAP && // Short high: price at or above VWAP
                 hasBearishWhale) {
                 console.log(`🚨 Bearish Alert: ${symbol} (Confirmed on ${label})`);
                 await sendDiscordAlert({
@@ -191,7 +192,7 @@ const analyzeSymbol = async (db, symbol) => {
                     priceChange,
                     volumeChange,
                     orderBookImbalance: imbalance,
-                    vwap: latestPrice.vwap,
+                    vwapDeviation, // Added VWAP deviation
                     fundingRate,
                     rsi1H,
                     breakout: breakout1H
@@ -203,7 +204,6 @@ const analyzeSymbol = async (db, symbol) => {
     }
 };
 
-// Start System with Cleanup
 (async () => {
     const db = await connectDB();
     await initSchemas(db);
