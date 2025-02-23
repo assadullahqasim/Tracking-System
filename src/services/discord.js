@@ -21,7 +21,7 @@ export const sendDiscordAlert = async ({
     volumeChange = 0,
     orderBookImbalance = 0,
     whaleData = null,
-    vwapDeviation = 0,
+    vwapDeviation = 0, // Updated to expect vwapDeviation
     fundingRate = null
 }) => {
     const isPump = priceChange > 0;
@@ -38,7 +38,7 @@ export const sendDiscordAlert = async ({
             { name: 'Price Change', value: `${movementEmoji} ${formatNumber(priceChange)}%`, inline: true },
             { name: 'Volume Spike', value: `📊 ${formatNumber(volumeChange, 1)}x`, inline: true },
             { name: 'Order Book Imbalance', value: `⚖️ ${formatNumber(orderBookImbalance)}x`, inline: true },
-            { name: 'VWAP Deviation', value: `🎯 ${formatNumber(vwapDeviation)}%`, inline: true },
+            { name: 'VWAP Deviation', value: `🎯 ${formatNumber(vwapDeviation)}%`, inline: true }, // Updated to vwapDeviation
             { 
                 name: 'Whale Activity', 
                 value: whaleData && whaleData.type && whaleData.amount 
